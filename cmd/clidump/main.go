@@ -49,8 +49,6 @@ func main() {
 	if len(args) > 0 {
 		switch args[0] {
 		case "dump":
-			fmt.Print("Samuel")
-			fmt.Print(args)
 			if len(args) == 1 {
 				if err := generateMarkdownDump(DEFAULT_COMMANDS_TO_DUMP); err != nil {
 					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -87,7 +85,8 @@ func main() {
 
 func printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("  clidump dump              - Generate markdown dump of command history")
+	fmt.Println("  clidump dump              - Generate markdown dump of unique command history up to 20 commands back")
+	fmt.Println("  clidump dump n             - Generate markdown dump of unique command history up to n commands back. Max n is 50")
 	fmt.Println("  clidump -t <description>  - Translate English description to Unix command")
 	fmt.Println("  clidump --install         - Install shell integration")
 }
@@ -132,7 +131,6 @@ ct() {
     fi
 
     if [ "$1" = "dump" ]; then
-		echo "hello world"
         clidump dump
         return 0
     fi
