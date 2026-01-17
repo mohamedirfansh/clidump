@@ -1,17 +1,17 @@
-# clilog
+# clidump
 
 CLI history logger and markdown converter.
 
 ## Installation
 
 ```bash
-go install github.com/yourusername/clilog/cmd/clilog@latest
+go install github.com/yourusername/clidump/cmd/clidump@latest
 ```
 
 ## Usage
 
 ```bash
-clilog [command]
+clidump [command]
 ```
 
 ## Features
@@ -24,13 +24,13 @@ clilog [command]
 
 ```bash
 # Build
-go build -o clilog ./cmd/clilog
+go build -o clidump ./cmd/clidump
 
 # Run tests
 go test ./...
 
 # Run locally
-go run ./cmd/clilog
+go run ./cmd/clidump
 ```
 
 ## License

@@ -13,6 +13,6 @@ func main() {
 }
 
 func run() error {
-	fmt.Println("clilog - CLI history logger")
+	fmt.Println("clidump - CLI history logger")
 	return nil
 }

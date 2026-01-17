@@ -5,8 +5,8 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/clilog
-    binary: clilog
+  - main: ./cmd/clidump
+    binary: clidump
     env:
       - CGO_ENABLED=0
     goos:
