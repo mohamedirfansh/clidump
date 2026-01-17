@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/mohamedirfansh/clidump/internal/history"
 	"github.com/mohamedirfansh/clidump/internal/markdown"
@@ -16,43 +18,156 @@ const (
 )
 
 func main() {
-    // Define flags
-    englishCmd := flag.String("t", "", "Translate English description to Unix command")
-    verbose := flag.Bool("verbose", false, "Show translation explanation")
-    flag.Parse()
+	// Define flags
+	englishCmd := flag.String("t", "", "Translate English description to Unix command")
+	install := flag.Bool("install", false, "Install shell integration")
+	flag.Parse()
 
-    // If -t flag is provided, translate and exit
-    if *englishCmd != "" {
-        if err := translateCommand(*englishCmd, *verbose); err != nil {
-            fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-            os.Exit(1)
-        }
-        return
-    }
+	// Handle --install flag
+	if *install {
+		if err := installShellIntegration(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
 
-    if err := generateMarkdownDump(); err != nil {
-        fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-        os.Exit(1)
-    }
+	// If -t flag is provided, translate and exit
+	if *englishCmd != "" {
+		if err := translateCommand(*englishCmd); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	// Get remaining arguments after flags
+	args := flag.Args()
+
+	// Handle subcommands
+	if len(args) > 0 {
+		switch args[0] {
+		case "dump":
+			if err := generateMarkdownDump(); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		default:
+			fmt.Fprintf(os.Stderr, "Unknown command: %s\n", args[0])
+			printUsage()
+			os.Exit(1)
+		}
+	}
+
+	// No command provided, show usage
+	printUsage()
 }
 
-func translateCommand(englishDesc string, verbose bool) error {
-    command, err := translate.ToCommand(englishDesc)
-    if err != nil {
-        return err
-    }
+func printUsage() {
+	fmt.Println("Usage:")
+	fmt.Println("  clidump dump              - Generate markdown dump of command history")
+	fmt.Println("  clidump -t <description>  - Translate English description to Unix command")
+	fmt.Println("  clidump --install         - Install shell integration")
+}
 
-	fmt.Printf("\nSuggested command:\n%s\n", command)
+func installShellIntegration() error {
+	// Detect shell
+	shell := os.Getenv("SHELL")
+	var shellRC string
+	var wrapperFunc string
 
-    // if verbose {
-    //     fmt.Printf("Translating: %s\n", englishDesc)
-    //     fmt.Printf("\nSuggested command:\n%s\n", command)
-    // } else {
-    //     // Just output the command directly (no newline)
-    //     fmt.Printf("%s", command)
-    // }
-    
-    return nil
+	if strings.Contains(shell, "zsh") {
+		shellRC = filepath.Join(os.Getenv("HOME"), ".zshrc")
+		wrapperFunc = `
+# clidump shell integration
+ct() {
+    if [ -z "$1" ]; then
+        echo "Usage: ct \"description of command\" or ct dump"
+        return 1
+    fi
+
+    if [ "$1" = "dump" ]; then
+		echo "hello world"gti
+        clidump dump
+        return 0
+    fi
+
+    local cmd=$(clidump -t "$*")
+
+    if [ $? -eq 0 ] && [ -n "$cmd" ]; then
+        print -z "$cmd"
+    fi
+}
+`
+	} else if strings.Contains(shell, "bash") {
+		shellRC = filepath.Join(os.Getenv("HOME"), ".bashrc")
+		wrapperFunc = `
+# clidump shell integration
+ct() {
+    if [ -z "$1" ]; then
+        echo "Usage: ct \"description of command\" or ct dump"
+        return 1
+    fi
+
+    if [ "$1" = "dump" ]; then
+		echo "hello world"
+        clidump dump
+        return 0
+    fi
+
+    local cmd=$(clidump -t "$*")
+
+    if [ $? -eq 0 ] && [ -n "$cmd" ]; then
+        bind '"\e[0n": "'"$cmd"'"'
+        bind '"\e[0n"'
+    fi
+}
+`
+	} else {
+		return fmt.Errorf("unsupported shell: %s", shell)
+	}
+
+	// Check if already installed
+	content, err := os.ReadFile(shellRC)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to read %s: %w", shellRC, err)
+	}
+
+	if strings.Contains(string(content), "# clidump shell integration") {
+		fmt.Printf("✓ Shell integration already installed in %s\n", shellRC)
+		fmt.Printf("\nRun: source %s\n", shellRC)
+		return nil
+	}
+
+	// Append wrapper function
+	f, err := os.OpenFile(shellRC, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open %s: %w", shellRC, err)
+	}
+	defer f.Close()
+
+	if _, err := f.WriteString(wrapperFunc); err != nil {
+		return fmt.Errorf("failed to write to %s: %w", shellRC, err)
+	}
+
+	fmt.Printf("✓ Shell integration installed in %s\n", shellRC)
+	fmt.Printf("\nTo activate, run:\n")
+	fmt.Printf("  source %s\n\n", shellRC)
+	fmt.Printf("Then use:\n")
+	fmt.Printf("  ct \"list all files sorted by size\"\n")
+
+	return nil
+}
+
+func translateCommand(englishDesc string) error {
+	command, err := translate.ToCommand(englishDesc)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(command)
+	return nil
 }
 
 func generateMarkdownDump() error {
@@ -60,7 +175,7 @@ func generateMarkdownDump() error {
 	apiKey := os.Getenv("CLIDUMP_GROQ_KEY")
 	if apiKey == "" {
 		return fmt.Errorf("CLIDUMP_GROQ_KEY environment variable not set")
-	}	
+	}
 
 	// Get the last 20 unique commands
 	fmt.Println("Fetching command history...")
