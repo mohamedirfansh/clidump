@@ -63,7 +63,7 @@ func main() {
 					return
 				}
 				if count > 50 {
-					fmt.Fprintf(os.Stderr, "Error: maximum dump value can only be 50\n", os.Args[1])
+					fmt.Fprintf(os.Stderr, "Error: maximum dump value can only be 50 but was %s\n", os.Args[1])
 					return
 				}
 				if err := generateMarkdownDump(count); err != nil {
