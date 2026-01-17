@@ -46,6 +46,34 @@ func LastN(n int) ([]string, error) {
 	return lines[len(lines)-n:], nil
 }
 
+// LastNUnique returns the last n unique commands from shell history
+func LastNUnique(n int) ([]string, error) {
+	// Fetch n commands
+	commands, err := LastN(n)
+	if err != nil {
+		return nil, err
+	}
+
+	// Deduplicate while preserving order (keep the most recent occurrence)
+	seen := make(map[string]bool)
+	var unique []string
+
+	// Iterate in reverse to keep the most recent occurrence
+	for i := len(commands) - 1; i >= 0; i-- {
+		cmd := commands[i]
+		if cmd != "" && !seen[cmd] {
+			seen[cmd] = true
+			unique = append([]string{cmd}, unique...)
+		}
+	}
+
+	// // Return the last n unique commands
+	// if len(unique) > n {
+	// 	return unique[len(unique)-n:], nil
+	// }
+	return unique, nil
+}
+
 // zsh has metadata like ": 123456:0;command"
 func parse(line string) string {
 	for i, ch := range line {

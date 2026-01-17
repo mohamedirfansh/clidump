@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/mohamedirfansh/clidump/internal/history"
+	"github.com/mohamedirfansh/clidump/internal/markdown"
+	"github.com/mohamedirfansh/clidump/internal/openai"
 )
 
 const (
@@ -12,24 +14,46 @@ const (
 )
 
 func main() {
-	/**
-	* If none of the commands match, the default is to dump the last
-	* DEFAULT_COMMANDS_TO_DUMP number of commands on terminal
-	 */
-	if err := dumpLatestCommands(); err != nil {
+	if err := generateMarkdownDump(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func dumpLatestCommands() error {
-	cmds, err := history.LastN(DEFAULT_COMMANDS_TO_DUMP)
-	if err != nil {
-		return err
+func generateMarkdownDump() error {
+	// Get Groq API key from environment
+	apiKey := os.Getenv("CLIDUMP_GROQ_KEY")
+	if apiKey == "" {
+		return fmt.Errorf("CLIDUMP_GROQ_KEY environment variable not set")
 	}
 
-	for i, cmd := range cmds {
-		fmt.Printf("%2d  %s\n", i+1, cmd)
+	// Get the last 20 unique commands
+	fmt.Println("Fetching command history...")
+	commands, err := history.LastNUnique(DEFAULT_COMMANDS_TO_DUMP)
+	if err != nil {
+		return fmt.Errorf("failed to fetch command history: %w", err)
 	}
+
+	if len(commands) == 0 {
+		return fmt.Errorf("no commands found in history")
+	}
+
+	fmt.Printf("Found %d unique commands\n", len(commands))
+
+	// Get explanations from Groq
+	fmt.Println("Generating explanations with Groq...")
+	explanations, err := openai.ExplainCommands(apiKey, commands)
+	if err != nil {
+		return fmt.Errorf("failed to get command explanations: %w", err)
+	}
+
+	// Generate markdown file
+	fmt.Println("Creating markdown file...")
+	filepath, err := markdown.Generate(commands, explanations, "")
+	if err != nil {
+		return fmt.Errorf("failed to generate markdown: %w", err)
+	}
+
+	fmt.Printf("✓ Successfully created %s\n", filepath)
 	return nil
 }
