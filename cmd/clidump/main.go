@@ -130,7 +130,7 @@ func translateCommand(englishDesc string) error {
         return err
     }
 
-	fmt.Printf("%s", command)    
+	fmt.Print(command)    
     return nil
 }
 
