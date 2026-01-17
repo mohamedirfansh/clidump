@@ -21,10 +21,10 @@ func main() {
 }
 
 func generateMarkdownDump() error {
-	// Get OpenAI API key from environment
-	apiKey := os.Getenv("CLIDUMP_OPENAI_KEY")
+	// Get Groq API key from environment
+	apiKey := os.Getenv("CLIDUMP_GROQ_KEY")
 	if apiKey == "" {
-		return fmt.Errorf("CLIDUMP_OPENAI_KEY environment variable not set")
+		return fmt.Errorf("CLIDUMP_GROQ_KEY environment variable not set")
 	}
 
 	// Get the last 20 unique commands
@@ -40,8 +40,8 @@ func generateMarkdownDump() error {
 
 	fmt.Printf("Found %d unique commands\n", len(commands))
 
-	// Get explanations from OpenAI
-	fmt.Println("Generating explanations with OpenAI...")
+	// Get explanations from Groq
+	fmt.Println("Generating explanations with Groq...")
 	explanations, err := openai.ExplainCommands(apiKey, commands)
 	if err != nil {
 		return fmt.Errorf("failed to get command explanations: %w", err)

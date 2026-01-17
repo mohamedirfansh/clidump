@@ -8,13 +8,21 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-// ExplainCommands takes a list of CLI commands and returns their explanations using OpenAI
+const (
+	groqBaseURL = "https://api.groq.com/openai/v1"
+	groqModel   = "llama-3.3-70b-versatile"
+)
+
+// ExplainCommands takes a list of CLI commands and returns their explanations using Groq API
 func ExplainCommands(apiKey string, commands []string) (map[string]string, error) {
 	if apiKey == "" {
-		return nil, fmt.Errorf("OpenAI API key is required")
+		return nil, fmt.Errorf("Groq API key is required")
 	}
 
-	client := openai.NewClient(apiKey)
+	// Create Groq client using OpenAI-compatible SDK
+	config := openai.DefaultConfig(apiKey)
+	config.BaseURL = groqBaseURL
+	client := openai.NewClientWithConfig(config)
 	explanations := make(map[string]string)
 
 	// Build a single prompt with all commands for efficiency
@@ -29,24 +37,24 @@ func ExplainCommands(apiKey string, commands []string) (map[string]string, error
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
+			Model: groqModel,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleUser,
 					Content: promptBuilder.String(),
 				},
 			},
-			MaxTokens:   500,      // ↓ also reduce this
+			MaxTokens:   1000,
 			Temperature: 0.3,
 		},
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("OpenAI API error: %w", err)
+		return nil, fmt.Errorf("Groq API error: %w", err)
 	}
 
 	if len(resp.Choices) == 0 {
-		return nil, fmt.Errorf("no response from OpenAI")
+		return nil, fmt.Errorf("no response from Groq")
 	}
 
 	// Parse the numbered response
