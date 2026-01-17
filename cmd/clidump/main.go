@@ -1,12 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/mohamedirfansh/clidump/internal/history"
 	"github.com/mohamedirfansh/clidump/internal/markdown"
 	"github.com/mohamedirfansh/clidump/internal/openai"
+	"github.com/mohamedirfansh/clidump/internal/translate"
 )
 
 const (
@@ -14,10 +16,43 @@ const (
 )
 
 func main() {
-	if err := generateMarkdownDump(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
+    // Define flags
+    englishCmd := flag.String("t", "", "Translate English description to Unix command")
+    verbose := flag.Bool("verbose", false, "Show translation explanation")
+    flag.Parse()
+
+    // If -t flag is provided, translate and exit
+    if *englishCmd != "" {
+        if err := translateCommand(*englishCmd, *verbose); err != nil {
+            fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+            os.Exit(1)
+        }
+        return
+    }
+
+    if err := generateMarkdownDump(); err != nil {
+        fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+        os.Exit(1)
+    }
+}
+
+func translateCommand(englishDesc string, verbose bool) error {
+    command, err := translate.ToCommand(englishDesc)
+    if err != nil {
+        return err
+    }
+
+	fmt.Printf("\nSuggested command:\n%s\n", command)
+
+    // if verbose {
+    //     fmt.Printf("Translating: %s\n", englishDesc)
+    //     fmt.Printf("\nSuggested command:\n%s\n", command)
+    // } else {
+    //     // Just output the command directly (no newline)
+    //     fmt.Printf("%s", command)
+    // }
+    
+    return nil
 }
 
 func generateMarkdownDump() error {
@@ -25,7 +60,7 @@ func generateMarkdownDump() error {
 	apiKey := os.Getenv("CLIDUMP_GROQ_KEY")
 	if apiKey == "" {
 		return fmt.Errorf("CLIDUMP_GROQ_KEY environment variable not set")
-	}
+	}	
 
 	// Get the last 20 unique commands
 	fmt.Println("Fetching command history...")

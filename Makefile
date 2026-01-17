@@ -1,5 +1,5 @@
 APP_NAME=clidump
-CMD_DIR=./cmd/$(APP_NAME)
+CMD_DIR=./cmd/$(APP_NAME) -t "list all files in current directory including hidden files"
 
 .PHONY: dev build test clean
 
