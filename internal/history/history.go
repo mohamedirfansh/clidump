@@ -2,6 +2,7 @@ package history
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -50,6 +51,8 @@ func LastN(n int) ([]string, error) {
 func LastNUnique(n int) ([]string, error) {
 	// Fetch n commands
 	commands, err := LastN(n)
+	fmt.Println("These are the commands")
+	fmt.Println(commands)
 	if err != nil {
 		return nil, err
 	}

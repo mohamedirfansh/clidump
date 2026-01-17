@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/mohamedirfansh/clidump/internal/history"
@@ -48,9 +49,29 @@ func main() {
 	if len(args) > 0 {
 		switch args[0] {
 		case "dump":
-			if err := generateMarkdownDump(); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				os.Exit(1)
+			fmt.Print("Samuel")
+			fmt.Print(args)
+			if len(args) == 1 {
+				if err := generateMarkdownDump(DEFAULT_COMMANDS_TO_DUMP); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					return
+					os.Exit(1)
+				}
+			}
+			if len(args) == 2 {
+				count, err := strconv.Atoi(args[1])
+				if err != nil || count < 1 {
+					fmt.Fprintf(os.Stderr, "Error: invalid start value '%s' - must be a positive integer\n", args[1])
+					return
+				}
+				if count > 50 {
+					fmt.Fprintf(os.Stderr, "Error: maximum dump value can only be 50\n", os.Args[1])
+					return
+				}
+				if err := generateMarkdownDump(count); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					return
+				}
 			}
 			return
 		default:
@@ -88,8 +109,8 @@ ct() {
     fi
 
     if [ "$1" = "dump" ]; then
-		echo "hello world"gti
-        clidump dump
+		echo "hello world"
+        clidump $*
         return 0
     fi
 
@@ -170,7 +191,7 @@ func translateCommand(englishDesc string) error {
 	return nil
 }
 
-func generateMarkdownDump() error {
+func generateMarkdownDump(count int) error {
 	// Get Groq API key from environment
 	apiKey := os.Getenv("CLIDUMP_GROQ_KEY")
 	if apiKey == "" {
@@ -179,7 +200,7 @@ func generateMarkdownDump() error {
 
 	// Get the last 20 unique commands
 	fmt.Println("Fetching command history...")
-	commands, err := history.LastNUnique(DEFAULT_COMMANDS_TO_DUMP)
+	commands, err := history.LastNUnique(count)
 	if err != nil {
 		return fmt.Errorf("failed to fetch command history: %w", err)
 	}
