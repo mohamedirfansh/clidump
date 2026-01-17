@@ -3,18 +3,27 @@ package main
 import (
 	"fmt"
 	"os"
+
 	"github.com/mohamedirfansh/clidump/internal/history"
 )
 
+const (
+	DEFAULT_COMMANDS_TO_DUMP = 20
+)
+
 func main() {
-	if err := run(); err != nil {
+	/**
+	* If none of the commands match, the default is to dump the last
+	* DEFAULT_COMMANDS_TO_DUMP number of commands on terminal
+	 */
+	if err := dumpLatestCommands(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	cmds, err := history.LastN(20)
+func dumpLatestCommands() error {
+	cmds, err := history.LastN(DEFAULT_COMMANDS_TO_DUMP)
 	if err != nil {
 		return err
 	}
