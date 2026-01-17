@@ -16,43 +16,42 @@ const (
 )
 
 func main() {
-	if err := generateMarkdownDump(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Define flags
+    // Define flags
     englishCmd := flag.String("t", "", "Translate English description to Unix command")
+    verbose := flag.Bool("verbose", false, "Show translation explanation")
     flag.Parse()
 
     // If -t flag is provided, translate and exit
     if *englishCmd != "" {
-        if err := translateCommand(*englishCmd); err != nil {
+        if err := translateCommand(*englishCmd, *verbose); err != nil {
             fmt.Fprintf(os.Stderr, "Error: %v\n", err)
             os.Exit(1)
         }
         return
     }
 
-	/**
-	* If none of the commands match, the default is to dump the last
-	* DEFAULT_COMMANDS_TO_DUMP number of commands on terminal
-	 */
-	if err := dumpLatestCommands(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
-	}
+    if err := generateMarkdownDump(); err != nil {
+        fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+        os.Exit(1)
+    }
 }
 
-func translateCommand(englishDesc string) error {
-    fmt.Printf("Translating: %s\n", englishDesc)
-    
+func translateCommand(englishDesc string, verbose bool) error {
     command, err := translate.ToCommand(englishDesc)
     if err != nil {
         return err
     }
 
-    fmt.Printf("\nSuggested command:\n%s\n", command)
+	fmt.Printf("\nSuggested command:\n%s\n", command)
+
+    // if verbose {
+    //     fmt.Printf("Translating: %s\n", englishDesc)
+    //     fmt.Printf("\nSuggested command:\n%s\n", command)
+    // } else {
+    //     // Just output the command directly (no newline)
+    //     fmt.Printf("%s", command)
+    // }
+    
     return nil
 }
 

@@ -8,26 +8,34 @@ import (
     "github.com/sashabaranov/go-openai"
 )
 
-// ToCommand translates natural language to Unix commands using OpenAI
+const (
+    groqBaseURL = "https://api.groq.com/openai/v1"
+    groqModel   = "llama-3.1-8b-instant"
+)
+
+// ToCommand translates natural language to Unix commands using Groq API
 func ToCommand(naturalLanguage string) (string, error) {
-    apiKey := os.Getenv("CLIDUMP_OPENAI_KEY")
+    apiKey := os.Getenv("CLIDUMP_GROQ_KEY")
     if apiKey == "" {
-        return "", fmt.Errorf("CLIDUMP_OPENAI_KEY environment variable not set")
+        return "", fmt.Errorf("CLIDUMP_GROQ_KEY environment variable not set")
     }
 
-    client := openai.NewClient(apiKey)
+    // Create Groq client using OpenAI-compatible SDK
+    config := openai.DefaultConfig(apiKey)
+    config.BaseURL = groqBaseURL
+    client := openai.NewClientWithConfig(config)
     
     resp, err := client.CreateChatCompletion(
         context.Background(),
         openai.ChatCompletionRequest{
-            Model: openai.GPT4o,
+            Model: groqModel,
             Messages: []openai.ChatCompletionMessage{
                 {
-                    Role:    "system",
+                    Role:    openai.ChatMessageRoleSystem,
                     Content: "You are a Unix command translator. Convert natural language descriptions to Unix commands. Return ONLY the command, no explanations or markdown.",
                 },
                 {
-                    Role:    "user",
+                    Role:    openai.ChatMessageRoleUser,
                     Content: naturalLanguage,
                 },
             },
@@ -37,11 +45,11 @@ func ToCommand(naturalLanguage string) (string, error) {
     )
 
     if err != nil {
-        return "", fmt.Errorf("OpenAI API error: %w", err)
+        return "", fmt.Errorf("Groq API error: %w", err)
     }
 
     if len(resp.Choices) == 0 {
-        return "", fmt.Errorf("no response from OpenAI")
+        return "", fmt.Errorf("no response from Groq")
     }
 
     return resp.Choices[0].Message.Content, nil
