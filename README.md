@@ -22,7 +22,7 @@ clidump-1.md
 
 ## Installation
 
-1. Download the clidump binary from: 
+1. Download the latest release of the clidump binary from: https://github.com/mohamedirfansh/clidump/releases
 2. Add the location of the binary to your PATH (add it in .bashrc or .zshrc for it to be permenant)
 ```bash
 export PATH=/location/of/binary:$PATH
