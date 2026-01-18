@@ -58,7 +58,9 @@ go run ./cmd/clidump
 
 ## License
 
-See LICENSE file for details.
+[![GitHub](https://img.shields.io/github/license/mohamedirfansh/clidump)](https://github.com/mohamedirfansh/clidump/blob/master/LICENSE)
+
+This project is licensed under the **[MIT License](http://opensource.org/licenses/mit-license.php)** - see the [LICENSE](https://github.com/mohamedirfansh/clidump/blob/master/LICENSE) file for more details.
 
 ---
 
